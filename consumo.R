@@ -27,10 +27,10 @@ corrplot::corrplot(cor(df1))
 
 ###  1. ¿Cuáles son las 10 fechas que más consumo registraron de diesel? <br/>
 
-consumo[,'']
-consumo[,'']
+consumo[,'Fecha']
+consumo[,'Diesel alto azufre']
 
-fecha<-consumo[,'']
-diesel<-consumo[,'']
-q1<-consumo[,'']
-q1<-data.frame()
+fecha<-consumo[,'Fecha']
+diesel<-consumo[,'Diesel alto azufre']
+
+q1<-data.frame(fecha, diesel)
