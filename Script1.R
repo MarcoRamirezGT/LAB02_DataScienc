@@ -2,5 +2,5 @@
 # Loading
 library("readxl")
 # xls files
-db <- read_excel("importacion.xlsx")
-View(db)
+importacion <- read_excel("importacion.xlsx")
+View(importacion)
