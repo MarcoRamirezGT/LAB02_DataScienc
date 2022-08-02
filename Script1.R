@@ -15,6 +15,6 @@ ncol(importacion)
 #Que mes fue el que mas tuvo mas importacion 
 superior <- importacion[order(importacion$`Gasolina superior`),]
 superior<- head(importacion,10)
-superior<- 
+superior<- superior[,1:2]
 View(superior)
 
