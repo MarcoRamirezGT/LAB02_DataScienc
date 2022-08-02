@@ -1,0 +1,56 @@
+---
+title: "Importaciones"
+author: "Marco Ramirez, Estuardo Hernandez"
+date: "2022-08-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r }
+# libreria
+library("readxl")
+# xls files
+importacion <- read_excel("importacion.xlsx")
+importacion$Fecha<-as.Date(importacion$Fecha, "%Y/%m/%d")
+```
+
+
+## Importaciones
+
+El dataset de importaciones cuenta con `r nrow(importacion)` filas y `r ncol(importacion)` las cuales son las siguientes 
+```{r}
+
+str(importacion)
+```
+
+Los datos almacenados en la base de datos son los siguientes:
+ * Fecha=continua 
+ * Gasolina superior = Cuantitativa continua
+ * Gasolina regular = Cuantitativa continua
+ * Diesel alto azufre = Cuantitativa continua
+
+La variable gasolina superior tiene el siguiente comportamiento:
+
+```{r}
+hist(x = importacion$`Gasolina superior`)
+
+```
+
+La variable gasolina regular tiene el siguiente comportamiento:
+
+```{r}
+hist(x = importacion$`Gasolina regular`)
+
+```
+La variable gasolina alto azufre tiene el siguiente comportamiento:
+
+```{r}
+hist(x = importacion$`Diesel alto azufre`)
+
+```
+
+
