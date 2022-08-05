@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r }
 # libreria
 library("readxl")
+library(ggplot2)
+
 # xls files
 importacion <- read_excel("importacion.xlsx")
 importacion$Fecha<-as.Date(importacion$Fecha, "%Y/%m/%d")
@@ -53,4 +55,167 @@ hist(x = importacion$`Diesel alto azufre`)
 
 ```
 
+## Analisis Exploratorio
 
+
+### ¿Cuál fue la fecha con mayor cantidad de importaciones de gasolina superior?
+```{r}
+
+superior <- importacion[order(-importacion$`Gasolina superior`),]
+superior<- head(superior,10)
+superior<- superior[,1:2]
+superior
+
+
+```
+Tal como se observa la fecha con mayor importacion de gasolina superior es *2021-04-01* con una cantidad de *`r as.integer(superior[1,2])`*
+
+### ¿Cuál fue la fecha con menor cantidad de importaciones de gasolina superior?
+
+```{r}
+inferior <- importacion[order(importacion$`Gasolina superior`),]
+inferior<- head(inferior,10)
+inferior<- inferior[,1:2]
+inferior
+```
+
+Tal como se observa la fecha con menor importacion es *`r inferior [1,1]`* con una cantidad de *`r as.integer(inferior [1,2])`*
+
+### ¿Cuál fue la fecha con mayor cantidad de importaciones de gasolina Diesel?
+
+```{r}
+
+dieselImpo <- importacion[order(-importacion$`Diesel alto azufre`),]
+dieselImpo<- head(dieselImpo,10)
+dieselImpo<- dieselImpo[c('Fecha','Diesel alto azufre')]
+dieselImpo
+
+```
+Tal como se observa la fecha con mayor importacion de gasolina superior es *`r dieselImpo[1,1]`* con una cantidad de *`r as.integer(dieselImpo[1,2])`*
+
+
+### ¿Cuál fue la fecha con menor cantidad de importaciones de gasolina Diesel?
+```{r}
+diesel_menor_impor <- importacion[order(importacion$`Diesel alto azufre`),]
+diesel_menor_impor<- head(diesel_menor_impor,10)
+diesel_menor_impor<- diesel_menor_impor[c('Fecha','Diesel alto azufre')]
+diesel_menor_impor
+```
+
+Tal como se observa la fecha con menor importacion es *`r diesel_menor_impor[1,1]`* con una cantidad de *`r as.integer(diesel_menor_impor[1,2])`*
+
+### ¿Cuál fue la fecha con mayor cantidad de importaciones de gasolina Regular?
+
+```{r}
+regular_impo <- importacion[order(-importacion$`Gasolina regular`),]
+regular_impo<- head(regular_impo,10)
+regular_impo<- regular_impo[c('Fecha','Gasolina regular')]
+regular_impo
+```
+
+Tal como se observa la fecha con mayor importacion de gasolina superior es *`r regular_impo[1,1]`* con una cantidad de *`r as.integer(regular_impo[1,2])`*
+
+### ¿Cuál fue la fecha con menor cantidad de importaciones de gasolina Regular?
+
+```{r}
+regular_impo_menor <- importacion[order(importacion$`Gasolina regular`),]
+regular_impo_menor<- head(regular_impo_menor,10)
+regular_impo_menor<- regular_impo_menor[c('Fecha','Gasolina regular')]
+regular_impo_menor
+```
+
+Tal como se observa la fecha con menor importacion es *`r regular_impo_menor[1,1]`* con una cantidad de *`r as.integer(regular_impo_menor[1,2])`*
+
+
+### ¿Qué tipo de gasolina ha sido la más importada hasta la fecha?
+
+```{r}
+ask1<-data.frame(Tipo=c('Superior','Regular','Diesel'),
+                 Promedio=c(mean(importacion$`Gasolina superior`),mean(importacion$`Gasolina regular`),mean(importacion$`Diesel alto azufre`)))
+
+ask1_chart<-ggplot(data=ask1, aes(x=Tipo, y=Promedio, fill=Tipo)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=as.integer(Promedio)), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  labs(title="Promedio de importaciones por tipo de gasolina", y="Promedio")+
+  theme(legend.position="none")
+
+
+ask1_chart
+```
+
+Como se observa en la grafica anterior el tipo de gasolina con mayor importacion es Diesel, lo cual tiene coherencia debido que en Guatemala se utiliza muchos vehiculos categorizados como carga pesada, sobre todo en las areas rurales y agricolas, ademas que este tipo de gasolina tiende a ser mas economica que los demas, por ello se busca vehiculos que la utilicen para economizar gastos. 
+
+### Año que mas importaciones hubo de gasolina Diesel
+
+```{r fig.height=8, fig.width=13, warning=FALSE}
+chart_diesel<-ggplot(importacion, aes(x = format(importacion$Fecha, format='%Y'), y = importacion$`Diesel alto azufre`, fill =format(importacion$Fecha, format='%Y') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por año de gasolina Diesel", y="Importacion" , x='Año')+
+  theme(legend.position="none")
+
+mes_2014<-subset(importacion,Fecha<'2015-01-01' & Fecha>'2013-12-31')
+
+
+chart_diesel_mes<-ggplot(mes_2014, aes(x = format(mes_2014$Fecha, format='%m'), y = mes_2014$`Gasolina regular`, fill =format(mes_2014$Fecha, format='%m') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por mes de gasolina Diesel en el año 2014", y="Importacion" , x='Mes')+
+  theme(legend.position="none")
+
+chart_diesel
+
+```
+
+Como se observa en la grafica anterior el año con mayor importacion es 2014, sin embargo veamos el comportamiento de las importaciones en este año.
+
+```{r warning=FALSE}
+chart_diesel_mes
+```
+Como se observa, hubo un aumento de importaciones a inicios y finales del año 2014, una de las posibles causas fue el sismo que ocurrio a inicios de ese año y a finales del año el precio del combustible aumento. 
+
+### Año que mas importaciones hubo de gasolina Superior
+
+
+```{r fig.height=8, fig.width=13, warning=FALSE}
+chart_superior<-ggplot(importacion, aes(x = format(importacion$Fecha, format='%Y'), y = importacion$`Gasolina superior`, fill =format(importacion$Fecha, format='%Y') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por año de gasolina Superior", y="Importacion" , x='Año')+
+  theme(legend.position="none")
+#2021 Fue el año con mas importaciones
+#Vemos a detalle que paso en ese año
+
+
+mes_2021<-subset(importacion,Fecha<'2022-01-01' & Fecha>'2020-12-31')
+
+
+chart_superior_mes<-ggplot(mes_2021, aes(x = format(mes_2021$Fecha, format='%m'), y = mes_2021$`Gasolina superior`, fill =format(mes_2021$Fecha, format='%m') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por mes de gasolina Superior en el año 2021", y="Importacion" , x='Mes')+
+  theme(legend.position="none")
+chart_superior
+```
+
+Como se observa en la grafica anterior el año con mayor importacion fue 2021, donde en la siguiente grafica veremos a mas detalle que ocurrio durante los meses
+
+```{r warning=FALSE}
+chart_superior_mes
+```
+Como se logra observar el pico de importaciones de ese año es el mes de abril, un año despues del comienzo de la pandemia, cuando las regulaciones habian disminuido y las personas podian salir con mayor libertad.
+
+### Año que mas importaciones hubo de gasolina Regular
+```{r fig.height=8, fig.width=13, warning=FALSE}
+chart_regular<-ggplot(importacion, aes(x = format(importacion$Fecha, format='%Y'), y = importacion$`Gasolina regular`, fill =format(importacion$Fecha, format='%Y') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por año de gasolina Regular", y="Importacion" , x='Año')+
+  theme(legend.position="none")
+
+mes_2022<-subset(importacion,Fecha>'2021-12-31')
+
+chart_regular_mes<-ggplot(mes_2022, aes(x = format(mes_2022$Fecha, format='%m'), y = mes_2022$`Gasolina regular`, fill =format(mes_2022$Fecha, format='%m') )) +
+  geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por mes de gasolina Regular en el año 2022", y="Importacion" , x='Mes')+
+  theme(legend.position="none")
+chart_regular
+
+```
+Como se observa en la grafica anterior el año con mayor importacion es 2022, el cual veremos a mas detalle
+
+```{r warning=FALSE}
+chart_regular_mes
+```
+
+A pesar que llevamos 8 meses del año 2022, se encontro que durante el mes de abril hubo mayor cantidad de importacion de gasolina regular.
