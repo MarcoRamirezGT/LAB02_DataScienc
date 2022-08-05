@@ -250,14 +250,30 @@ frequency(regular_ts)
 #Grafica generada
 plot(regular_ts)
 abline(reg=lm(regular_ts~time(regular_ts)), col=c("red"))
+
+
+```
+Tras observar la grafica a simple vista podemos decir que es estacionaria, ademas que en el año 2020 la importacion de gasolina Superior tuvo una 'crisis' esto puede considerarse por la pandemia del COVID-19. Y que antes de la pandemia tuvo un pico considerable. 
+
+```{r}
+
+
 plot(aggregate(regular_ts,FUN=mean))
 dec.Regular<-decompose(regular_ts)
 plot(dec.Regular)
+
+```
+como se observa tiene estacionalidad por lo que no es estacionaria en varianza y tiene tendencia por lo que no es estacionaria en media
+```{r}
 plot(dec.Regular$seasonal)
 
 #Aplicaremos una transformación logarítmica
 logRegular <- log(regular_ts)
 plot(decompose(logRegular))
+
+```
+Aplicamos transformacion logaritmica debido que nuestra serie de tiempo tiene un sesgo positivo. 
+```{r}
 
 
 #Ver el gráfico de la serie
@@ -274,12 +290,16 @@ acf(logRegular)
 acf(diff(logRegular),12)
 pacf(diff(logRegular))
 
+
+```
+Tal como se habia mencionado anteriormente, esta serie de tiempo es estacionaria, ademas se obtuvo un valor de P de 0.01 indicando que tiene una correlacion positiva y respaldando el hecho de aplicar una funcion logaritmica a los datos. 
+```{r}
 # Hacer el modelo
 
 auto.arima(regular_ts)
 
 fit <- arima(log(regular_ts), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
-pred <- predict(fit, n.ahead = 10*12)
+pred <- predict(fit, n.ahead = 3)
 ts.plot(regular_ts,2.718^pred$pred, log = "y", lty = c(1,3))
 
 fit2 <- arima(log(regular_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
