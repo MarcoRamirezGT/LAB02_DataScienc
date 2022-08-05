@@ -5,9 +5,9 @@ library(ggplot2)
 
 # xls files
 importacion <- read_excel("importacion.xlsx")
-View(importacion)
 
-importacion$Fecha<-as.Date(importacion$Fecha, "%Y/%m/%d")
+
+importacion$Fecha<-as.Date(importacion$Fecha, "%Y/%mm/%d")
 
 
 nrow(importacion)
@@ -116,5 +116,61 @@ chart_diesel_mes<-ggplot(mes_2014, aes(x = format(mes_2014$Fecha, format='%m'), 
   geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por mes de gasolina Diesel en el año 2014", y="Importacion" , x='Mes')+
   theme(legend.position="none")
 
-       
-       
+#Series de tiempo  
+
+
+library(forecast)
+library(tseries)
+library(fUnitRoots)
+library(ggfortify)
+
+importacion <- read_excel("importacion.xlsx")
+
+regular<-importacion[c('Fecha','Gasolina regular')]
+diesel<-importacion[c('Fecha','Diesel alto azufre')]
+super<-importacion[c('Fecha','Gasolina superior')]
+
+regular_ts <- ts( regular$`Gasolina regular`, start = c(2001,1),frequency = 12)
+
+
+start(regular_ts)
+end(regular_ts)
+frequency(regular_ts)
+plot(regular_ts)
+abline(reg=lm(regular_ts~time(regular_ts)), col=c("red"))
+plot(aggregate(regular_ts,FUN=mean))
+dec.Regular<-decompose(regular_ts)
+plot(dec.Regular)
+plot(dec.Regular$seasonal)
+
+#Aplicaremos una transformación logarítmica
+logRegular <- log(regular_ts)
+plot(decompose(logRegular))
+
+
+#Ver el gráfico de la serie
+plot(logRegular)
+
+#Para saber si hay raíces unitarias
+adfTest(logRegular)
+adfTest(diff(logRegular))
+
+#Gráfico de autocorrelación
+acf(logRegular)
+
+# funciones de autocorrelación y autocorrelación parcial
+acf(diff(logRegular),12)
+pacf(diff(logRegular))
+
+# Hacer el modelo
+
+auto.arima(AirPassengers)
+
+fit <- arima(log(regular_ts), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
+pred <- predict(fit, n.ahead = 10*12)
+ts.plot(regular_ts,2.718^pred$pred, log = "y", lty = c(1,3))
+
+fit2 <- arima(log(regular_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
+
+forecastAP <- forecast(fit2, level = c(95), h = 120)
+autoplot(forecastAP)

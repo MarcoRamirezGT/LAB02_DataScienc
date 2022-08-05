@@ -219,3 +219,6 @@ chart_regular_mes
 ```
 
 A pesar que llevamos 8 meses del año 2022, se encontro que durante el mes de abril hubo mayor cantidad de importacion de gasolina regular.
+
+
+## Series de tiempo
