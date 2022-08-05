@@ -1,39 +1,28 @@
+---
+title: "Consumo de Gasolina"
+author: "Marco Ramirez, Estuardo Hernandez"
+date: "2022-08-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
 # Loading
 library("readxl")
 library(tibbletime)
 library(dplyr)
 library(tidyverse)
-
 # xls files
 consumo <- read_excel("Consumo.xlsx")
 
 consumo$Fecha<-as.Date(consumo$Fecha, "%Y/%m/%d")
-str(consumo)
-
-#Resumen general
-summary(consumo)
-
-#### Fecha: Cuantitativa continua
-#### Gasolina superior: Cuantitativa continua
-#### Gasolina regular: Cuantitativa continua
-#### Diesel alto azufre: Cuantitativa continua
-
-#Gráficos
-plot(consumo$Fecha)
-hist(x = consumo$`Gasolina superior`)
-hist(x = consumo$`Gasolina regular`)
-hist(x = consumo$`Diesel alto azufre`)
-
-## Correlación de las variables numéricas
 df1<-data.frame(consumo$`Gasolina superior`, consumo$`Gasolina regular`, consumo$`Diesel alto azufre`)
-corrplot::corrplot(cor(df1))
-
-#PREGUNTAS
 fecha<-consumo[,'Fecha']
 diesel<-consumo[,'Diesel alto azufre']
 super<-consumo[,'Gasolina superior']
 regular<-consumo[,'Gasolina regular']
-###  1. ¿Cuáles son los 10 meses que más consumo registraron de diesel? <br/>
+
 q1<-data.frame(fecha, diesel)
 ask1<-q1[order(-q1$Diesel.alto.azufre),]
 ask1f<-head(ask1,n=10)
@@ -43,9 +32,7 @@ pregunta1<-ggplot(data=ask1f, aes(x=reorder(Fecha,-Diesel.alto.azufre) , y=Diese
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que más consumo registraron de diesel", x="Fecha", y="Diesel")
-pregunta1
 
-###  2. ¿Cuáles son los 10 meses que más consumo registraron de gasolina superior? <br/>
 q2<-data.frame(fecha, super)
 ask2<-q2[order(-q2$Gasolina.superior),]
 ask2f<-head(ask2,n=10)
@@ -55,9 +42,7 @@ pregunta2<-ggplot(data=ask2f, aes(x=reorder(Fecha,-Gasolina.superior) , y=Gasoli
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que más consumo registraron de gasolina superior", x="Fecha", y="Gasolina superior")
-pregunta2
 
-###  3. ¿Cuáles son los 10 meses que más consumo registraron de gasolina regular? <br/>
 q3<-data.frame(fecha, regular)
 ask3<-q3[order(-q3$Gasolina.regular),]
 ask3f<-head(ask3,n=10)
@@ -67,9 +52,7 @@ pregunta3<-ggplot(data=ask3f, aes(x=reorder(Fecha,-Gasolina.regular) , y=Gasolin
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que más consumo registraron de gasolina regular", x="Fecha", y="Gasolina regular")
-pregunta3
 
-###  4. ¿Cuáles son los 10 meses que menos consumo registraron de diesel? <br/>
 q4<-data.frame(fecha, diesel)
 ask4<-q4[order(q4$Diesel.alto.azufre),]
 ask4f<-head(ask4,n=10)
@@ -79,9 +62,7 @@ pregunta4<-ggplot(data=ask4f, aes(x=reorder(Fecha,Diesel.alto.azufre) , y=Diesel
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que menos consumo registraron de diesel", x="Fecha", y="Diesel")
-pregunta4
 
-###  5. ¿Cuáles son los 10 meses que menos consumo registraron de gasolina superior? <br/>
 q5<-data.frame(fecha, super)
 ask5<-q5[order(q5$Gasolina.superior),]
 ask5f<-head(ask5,n=10)
@@ -91,9 +72,7 @@ pregunta5<-ggplot(data=ask5f, aes(x=reorder(Fecha,Gasolina.superior) , y=Gasolin
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que menos consumo registraron de gasolina superior", x="Fecha", y="Gasolina superior")
-pregunta5
 
-###  6. ¿Cuáles son los 10 meses que menos consumo registraron de gasolina regular? <br/>
 q6<-data.frame(fecha, regular)
 ask6<-q6[order(q6$Gasolina.regular),]
 ask6f<-head(ask6,n=10)
@@ -103,4 +82,91 @@ pregunta6<-ggplot(data=ask6f, aes(x=reorder(Fecha,Gasolina.regular) , y=Gasolina
   scale_y_continuous(labels=scales::dollar)+
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   labs(title="Los 10 meses que menos consumo registraron de gasolina regular", x="Fecha", y="Gasolina regular")
+```
+
+El dataset de consumo cuenta con `r nrow(consumo)` filas y `r ncol(consumo)` las cuales son las siguientes:
+
+```{r}
+str(consumo)
+```
+
+## Resumen general del dataset
+
+```{r}
+summary(consumo)
+```
+
+## Clasificación de variables
+
+#### Fecha: Continua
+#### Gasolina superior: Cuantitativa continua
+#### Gasolina regular: Cuantitativa continua
+#### Diesel alto azufre: Cuantitativa continua
+
+## Representación gráfica de las variables
+
+#### -Fecha <br/>
+
+```{r, echo=FALSE}
+plot(consumo$Fecha)
+```
+
+#### -Gasolina superior <br/>
+
+```{r, echo=FALSE}
+hist(x = consumo$`Gasolina superior`)
+```
+
+#### -Gasolina regular <br/>
+
+```{r, echo=FALSE}
+hist(x = consumo$`Gasolina regular`)
+```
+
+#### -Diesel <br/>
+
+```{r, echo=FALSE}
+hist(x = consumo$`Diesel alto azufre`)
+```
+
+## Correlación de las variables numéricas <br/>
+
+```{r, echo=FALSE}
+corrplot::corrplot(cor(df1))
+```
+
+###  1. ¿Cuáles son los 10 meses que más consumo registraron de diesel? <br/>
+
+```{r}
+pregunta1
+```
+
+###  2. ¿Cuáles son los 10 meses que más consumo registraron de gasolina superior? <br/>
+
+```{r}
+pregunta2
+```
+
+###  3. ¿Cuáles son los 10 meses que más consumo registraron de gasolina regular? <br/>
+
+```{r}
+pregunta3
+```
+
+###  4. ¿Cuáles son los 10 meses que menos consumo registraron de diesel? <br/>
+
+```{r}
+pregunta4
+```
+
+###  5. ¿Cuáles son los 10 meses que menos consumo registraron de gasolina superior? <br/>
+
+```{r}
+pregunta5
+```
+
+###  6. ¿Cuáles son los 10 meses que menos consumo registraron de gasolina regular? <br/>
+
+```{r}
 pregunta6
+```
