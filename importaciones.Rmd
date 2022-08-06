@@ -223,7 +223,7 @@ A pesar que llevamos 8 meses del año 2022, se encontro que durante el mes de ab
 
 ## Series de tiempo
 
-### Serie de tiempo de la gasolina super 
+### Serie de tiempo de la gasolina Regular 
 ```{r message=FALSE, warning=FALSE}
 #Series de tiempo  
 
@@ -253,7 +253,7 @@ abline(reg=lm(regular_ts~time(regular_ts)), col=c("red"))
 
 
 ```
-Tras observar la grafica a simple vista podemos decir que es estacionaria, ademas que en el año 2020 la importacion de gasolina Superior tuvo una 'crisis' esto puede considerarse por la pandemia del COVID-19. Y que antes de la pandemia tuvo un pico considerable. 
+Tras observar la grafica a simple vista podemos decir que es estacionaria, ademas que en el año 2020 la importacion de gasolina Regular tuvo una 'crisis' esto puede considerarse por la pandemia del COVID-19. Y que antes de la pandemia tuvo un pico considerable. 
 
 ```{r}
 
@@ -304,9 +304,28 @@ ts.plot(regular_ts,2.718^pred$pred, log = "y", lty = c(1,3))
 
 fit2 <- arima(log(regular_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
 
-forecastAP <- forecast(fit2, level = c(95), h = 120)
+forecastAP <- forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP)
 ```
+Tal como se observa segun la prediccion indica que la importacion seguira reduciendose durante estos años, y tiene coherencia ya que el precio de la gasolina sigue aumentando y las personas hoy en dia deciden transportarse por otros medio o incluso consumir otro tipo de gasolina. 
+
+```{r}
+regular_ts2018 <- ts( regular$`Gasolina regular`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
+
+auto.arima(regular_ts2018)
+
+fit <- arima(log(regular_ts2018), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
+pred <- predict(fit, n.ahead = 3)
+ts.plot(regular_ts2018,2.718^pred$pred, log = "y", lty = c(1,3))
+
+fit2 <- arima(log(regular_ts2018), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
+
+forecastAP <- forecast(fit2, level = c(95), h = 3)
+autoplot(forecastAP)
+
+```
+
+Como se observa con las graficas anteriores, si se realizo una buena prediccion, ya que es muy similar a las graficas anteriormente generadas. 
 
 ### Serie de tiempo de gasolina Super
 
@@ -314,21 +333,38 @@ autoplot(forecastAP)
 
 super_ts <- ts( super$`Gasolina superior`, start = c(2001,1),frequency = 12)
 
-
+#Donde comienza la serie de tiempo
 start(super_ts)
+#Donde termina la serie de tiempo
 end(super_ts)
+#Frecuencia de la serie de tiempo
 frequency(super_ts)
 plot(super_ts)
 abline(reg=lm(super_ts~time(super_ts)), col=c("red"))
+```
+Tras observar la grafica a simple vista podemos decir que es estacionaria, ademas que en el año 2020 la importacion de gasolina Superior tuvo una 'crisis' esto puede considerarse por la pandemia del COVID-19.Ademas, tambien se observa que en años siguientes la importacion tuvo un pico. 
+
+
+```{r}
+
 plot(aggregate(super_ts,FUN=mean))
 dec.Regular<-decompose(super_ts)
 plot(dec.Regular)
 plot(dec.Regular$seasonal)
 
+
+```
+como se observa tiene estacionalidad por lo que no es estacionaria en varianza y tiene tendencia por lo que no es estacionaria en media
+
+```{R}
 #Aplicaremos una transformación logarítmica
 logSuper <- log(super_ts)
 plot(decompose(logSuper))
 
+```
+Aplicamos transformacion logaritmica debido que nuestra serie de tiempo tiene un sesgo positivo. 
+
+```{R}
 
 #Ver el gráfico de la serie
 plot(logSuper)
@@ -343,6 +379,11 @@ acf(logSuper)
 # funciones de autocorrelación y autocorrelación parcial
 acf(diff(logSuper),12)
 pacf(diff(logSuper))
+
+```
+Tal como se habia mencionado anteriormente, esta serie de tiempo es estacionaria, ademas se obtuvo un valor de P de 0.01 indicando que tiene una correlacion positiva y respaldando el hecho de aplicar una funcion logaritmica a los datos. 
+
+```{r}
 
 # Hacer el modelo
 
