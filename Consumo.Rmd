@@ -17,6 +17,9 @@ library(forecast)
 library(tseries)
 library(fUnitRoots)
 library(ggfortify)
+library(lmtest)
+library(prophet)
+library(zoo)
 # xls files
 consumo <- read_excel("Consumo.xlsx")
 
@@ -195,6 +198,14 @@ El mes con menos consumo de gasolina regular fue en mayo de 2004.
 
 ### Serie de tiempo del combustible diesel
 
+En este laboratorio usaremos la construcción de modelos ARIMA el cual consta de 4 pasos:
+1. Indentificación
+2. Estimación
+3. Validación
+4. Predicción
+
+#### Identificación
+
 ```{r}
 diesel_ts<-ts(dieselc$`Diesel alto azufre`, start = c(2001,1),frequency = 12)
 start(diesel_ts)
@@ -202,38 +213,168 @@ end(diesel_ts)
 frequency(diesel_ts)
 plot(diesel_ts)
 abline(reg=lm(diesel_ts~time(diesel_ts)), col=c("red"))
+```
+
+Acá se representa el comportamiento del consumo del combustible diesel desde enero 2001 hasta mayo 2022 y a simple vista se puede decir que no es estacionaria ni en media ni en varianza porque tiene tendencia a que el consumo de diesel va aumentando con el paso de los años. Además, en el año 2009 el consumo de diesel fue muy poco en comparación a años anteriores, luego como en el año 2021 hubo otro bajón de consumo, posiblemente se deba a los precios elevados del combustible por la guerra entre Ucrania y Rusia.
+
+```{r}
 plot(aggregate(diesel_ts,FUN=mean))
 dec.Diesel<-decompose(diesel_ts)
 plot(dec.Diesel)
-plot(dec.Diesel$seasonal)
+```
+
+En estas gráficas se afirma la tendencia a aumentar del consumo de diesel y que no es estacionaria en varianza.
+
+#### Estimación
+
+Como no es estacionaria en varianza se hizo una transformación logarítmica para hacerla estacionaria en varianza. Se realizó con la serie de entrenamiento que es la que nos ayudará a predecir.
+
+```{r}
+train<-head(diesel_ts, round(length(diesel_ts) * 0.7))
+h<-length(diesel_ts) - length(train)
+test<-tail(diesel_ts, h)
 
 #Aplicaremos una transformación logarítmica
-logDiesel<-log(diesel_ts)
-plot(decompose(logDiesel))
+logDiesel<-log(train)
+plot(decompose(train))
+plot(train)
+```
 
-#Ver el gráfico de la serie
-plot(logDiesel)
+Aparentemente ahora la serie es estacionaria en varianza. Ahora se debe verificar si es estacionaria en media, si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
 
+```{r}
 #Para saber si hay raíces unitarias
-adfTest(logDiesel)
-adfTest(diff(logDiesel))
+adfTest(train)
+unitrootTest(train)
+```
 
+Se observa que el valor de P es mayor a 0.05 por lo que la hipótesis nula no se rechaza, esto quiere decir que la serie no es estacionaria. Ahora veamos con diferenciación.
+
+```{r}
+adfTest(diff(train))
+unitrootTest(diff(train))
+```
+
+Ahora el valor de P sí está por debajo de 0.05 y la hipótesis nula se rechaza diciendo que la serie es estacionaria. Ahora trataremos de identificar los parámetros p y q usando los gráficos de autocorrelación y autocorrelación parcial.
+
+```{r}
 #Gráfico de autocorrelación
-acf(logDiesel)
+acf(logDiesel,50)
+```
 
-# funciones de autocorrelación y autocorrelación parcial
-acf(diff(logDiesel),12)
-pacf(diff(logDiesel))
+En el gráfico se observa que se anula después del primer retardo, entonces decimos que q = 1. Ahora veamos la función de correlación parcial.
 
+```{r}
+pacf(logDiesel,50)
+```
+
+Se anula después de dos retardos por lo que se plantea que el coeficiente p = 2. Podríamos elaborar un modelo con los siguientes parámetros:
+p=2.
+d=1.
+q=1.
+Es decir ARIMA(2,1,1).
+Ahora veamos si hay estacionalidad en la serie. Si volvemos a ver la descomposición de la serie en su componente estacional.
+
+```{r}
+decTrain<-decompose(train)
+plot(decTrain$seasonal)
+```
+
+Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en qué momentos son los picos estacionales, se usará la serie estacionarizada.
+
+```{r}
+acf(diff(logDiesel),36)
+pacf(diff(logDiesel),36)
+
+fitArima<-arima(logDiesel,order=c(2,1,2),seasonal = c(1,1,0))
+fitAutoArima<-auto.arima(train)
+```
+
+#### Validación
+
+```{r}
+coeftest(fitArima)
+```
+
+Se observa que todos los coeficientes son significativos. Ahora veamos el modelo generado de forma automática por R.
+
+```{r}
+coeftest(fitAutoArima)
+```
+
+También son significativos los coeficientes. Ahora analicemos los residuos de ambos modelos.
+
+##### Analisis de residuales
+
+```{r}
+qqnorm(fitArima$residuals)
+qqline(fitArima$residuals)
+checkresiduals(fitArima)
+```
+
+Según los gráficos podemos ver que la distribución de los datos parece ser normal, y que no hay correlaciones significativas.
+
+Según el test de Ljung-Box el valor de P es menor a 0.05 por lo que se rechaza la hipótesis nula, lo que significa que los residuos no se distribuyen de forma independiente, exhiben correlación serial.
+
+Ahora analizamos los residuos del modelo generado de forma automática por R.
+
+```{r}
+qqnorm(fitAutoArima$residuals)
+qqline(fitAutoArima$residuals)
+checkresiduals(fitAutoArima)
+```
+
+Se observa un caso bastante similar.
+
+#### Predicción
+
+```{r}
 # Hacer el modelo
 auto.arima(diesel_ts)
 fit<-arima(log(diesel_ts), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
-pred<-predict(fit, n.ahead = 10*12)
+pred<-predict(fit, n.ahead = 3)
 ts.plot(diesel_ts,2.718^pred$pred, log = "y", lty = c(1,3))
 fit2<-arima(log(diesel_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
-forecastAP1<-forecast(fit2, level = c(95), h = 120)
+forecastAP1<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP1)
 ```
+
+Tal como se observa, la prediccion indica que el consumo de diesel se mantendrá, es decir, irá bajando y subiendo durante los próximos años.
+
+```{r}
+diesel_ts2018<-ts( diesel$`Diesel alto azufre`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
+auto.arima(diesel_ts2018)
+fit<-arima(log(diesel_ts2018), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
+pred<-predict(fit, n.ahead = 3)
+ts.plot(diesel_ts2018,2.718^pred$pred, log = "y", lty = c(1,3))
+fit2<-arima(log(diesel_ts2018), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
+forecastAP<-forecast(fit2, level = c(95), h = 3)
+autoplot(forecastAP)
+```
+
+Se concluye que la predicción hecha es buena, ya que las gráficas son muy similares a las gráficas generadas anteriormente.
+
+#### Prophet
+
+```{r}
+df<-data.frame(ds=as.Date(as.yearmon(time(train))),y=as.matrix(train) )
+testdf<-data.frame(ds=as.Date(as.yearmon(time(test))),y=as.matrix(test) )
+head(df)
+fitProphet<-prophet(df,yearly.seasonality = T,weekly.seasonality = T)
+future<-make_future_dataframe(fitProphet,periods = h,freq = "month", include_history = T)
+p<-predict(fitProphet,future)
+p<-p[,c("ds","yhat","yhat_lower","yhat_upper")]
+plot(fitProphet,p)
+pred<-tail(p,h)
+pred$y<-testdf$y
+
+ggplot(pred, aes(x=ds, y=yhat)) +
+   geom_line(size=1, alpha=0.8) +
+   geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="blue", alpha=0.2) +
+   geom_line(data=pred, aes(x=ds, y=y),color="red")
+```
+
+Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
 
 ### Serie de tiempo del combustible superior
 

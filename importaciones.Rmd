@@ -467,6 +467,7 @@ ggplot(pred, aes(x=ds, y=yhat)) +
    geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="blue", alpha=0.2) +
    geom_line(data=pred, aes(x=ds, y=y),color="red")
 ```
+Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
 
 ### Serie de tiempo de la gasolina Super 
 
@@ -711,7 +712,7 @@ ggplot(pred, aes(x=ds, y=yhat)) +
    geom_line(data=pred, aes(x=ds, y=y),color="red")
 ```
 
-
+Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
 
 ### Serie de tiempo de la gasolina Diesel 
 
@@ -956,4 +957,4 @@ ggplot(pred, aes(x=ds, y=yhat)) +
    geom_line(data=pred, aes(x=ds, y=y),color="red")
 ```
 
-
+Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
