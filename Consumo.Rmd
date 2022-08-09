@@ -389,7 +389,7 @@ plot(super_ts)
 abline(reg=lm(super_ts~time(super_ts)), col=c("red"))
 ```
 
-Acá se representa el comportamiento del consumo del combustible diesel desde enero 2001 hasta mayo 2022 y a simple vista se puede decir que no es estacionaria ni en media ni en varianza porque tiene tendencia a que el consumo de diesel va aumentando con el paso de los años. Además, en el año 2009 el consumo de diesel fue muy poco en comparación a años anteriores, luego como en el año 2021 hubo otro bajón de consumo, posiblemente se deba a los precios elevados del combustible por la guerra entre Ucrania y Rusia.
+Acá se representa el comportamiento del consumo de la gasolina superior desde enero 2001 hasta mayo 2022 y a simple vista se puede decir que no es estacionaria ni en media ni en varianza porque tiene tendencia a que el consumo de gasolina superior va aumentando con el paso de los años. Sin embargo, después del 2020 hay un gran decaimiento en el consumo de dicho combustible, esto puede ser debido a la pandemia causada por el Covid-19 y posteriormente a los precios elevados del combustible por la guerra entre Ucrania y Rusia.
 
 ```{r}
 plot(aggregate(super_ts,FUN=mean))
@@ -397,11 +397,11 @@ dec.Super<-decompose(super_ts)
 plot(dec.Super)
 ```
 
-En estas gráficas se afirma la tendencia a aumentar del consumo de diesel y que no es estacionaria en varianza.
+En estas gráficas se afirma la tendencia a aumentar del consumo de gasolina superior y que no es estacionaria en varianza.
 
 #### Estimación
 
-Como no es estacionaria en varianza se hizo una transformación logarítmica para hacerla estacionaria en varianza. Se realizó con la serie de entrenamiento que es la que nos ayudará a predecir.
+Como no es estacionaria en varianza se hizo una transformación logarítmica para hacer que sea estacionaria en varianza. Se realizó con la serie de entrenamiento que es la que nos ayudará a predecir.
 
 ```{r}
 train<-head(super_ts, round(length(super_ts) * 0.7))
@@ -414,7 +414,7 @@ plot(decompose(train))
 plot(train)
 ```
 
-Aparentemente ahora la serie es estacionaria en varianza. Ahora se debe verificar si es estacionaria en media, si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
+Aparentemente ahora la serie es estacionaria en varianza. Ahora se debe verificar si es estacionaria en media, si tiene raices unitarias podemos decir que no es estacionaria en media y habría que proseguir a aplicar procesos de diferenciación.
 
 ```{r}
 #Para saber si hay raíces unitarias
@@ -422,21 +422,21 @@ adfTest(train)
 unitrootTest(train)
 ```
 
-Se observa que el valor de P es mayor a 0.05 por lo que la hipótesis nula no se rechaza, esto quiere decir que la serie no es estacionaria. Ahora veamos con diferenciación.
+Se observa que el valor de P es mayor a 0.05 por lo que la hipótesis nula no se rechaza, lo que significa que la serie no es estacionaria. Ahora aplicamos diferenciación.
 
 ```{r}
 adfTest(diff(train))
 unitrootTest(diff(train))
 ```
 
-Ahora el valor de P sí está por debajo de 0.05 y la hipótesis nula se rechaza diciendo que la serie es estacionaria. Ahora trataremos de identificar los parámetros p y q usando los gráficos de autocorrelación y autocorrelación parcial.
+Ahora el valor de P sí está por debajo de 0.05 y la hipótesis nula se rechaza diciendo que la serie es estacionaria. Seguimos con identificar los parámetros p y q usando los gráficos de autocorrelación y autocorrelación parcial.
 
 ```{r}
 #Gráfico de autocorrelación
 acf(logSuper,50)
 ```
 
-En el gráfico se observa que se anula después del primer retardo, entonces decimos que q = 1. Ahora veamos la función de correlación parcial.
+En el gráfico se observa que se anula después del segundo retardo, entonces decimos que q = 2. Ahora veamos la función de correlación parcial.
 
 ```{r}
 pacf(logSuper,50)
@@ -445,8 +445,8 @@ pacf(logSuper,50)
 Se anula después de dos retardos por lo que se plantea que el coeficiente p = 2. Podríamos elaborar un modelo con los siguientes parámetros:
 p=2.
 d=1.
-q=1.
-Es decir ARIMA(2,1,1).
+q=2.
+Es decir ARIMA(2,1,2).
 Ahora veamos si hay estacionalidad en la serie. Si volvemos a ver la descomposición de la serie en su componente estacional.
 
 ```{r}
@@ -498,7 +498,7 @@ qqline(fitAutoArima$residuals)
 checkresiduals(fitAutoArima)
 ```
 
-Se observa un caso bastante similar.
+Se observa un caso bastante similar, pero con un valor de P no tan menor.
 
 #### Predicción
 
@@ -513,7 +513,7 @@ forecastAP2<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP2)
 ```
 
-Tal como se observa, la prediccion indica que el consumo de diesel se mantendrá, es decir, irá bajando y subiendo durante los próximos años.
+Tal como se observa, la prediccion indica que el consumo de gasolina superior se mantendrá, es decir, primero irá subiendo y luego bajará, y así sucesivamente durante los próximos años.
 
 ```{r}
 super_ts2018<-ts( super$`Gasolina superior`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
@@ -526,7 +526,7 @@ forecastAP<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP)
 ```
 
-Se concluye que la predicción hecha es buena, ya que las gráficas son muy similares a las gráficas generadas anteriormente.
+Se concluye que la predicción hecha es buena, ya que las gráficas son muy similares a las gráficas generadas anteriormente, con el único cambio de que primero el consumo bajrá y luego subirá pero se sigue manteniendo.
 
 #### Prophet
 
@@ -563,7 +563,7 @@ plot(regular_ts)
 abline(reg=lm(regular_ts~time(regular_ts)), col=c("red"))
 ```
 
-Acá se representa el comportamiento del consumo del combustible diesel desde enero 2001 hasta mayo 2022 y a simple vista se puede decir que no es estacionaria ni en media ni en varianza porque tiene tendencia a que el consumo de diesel va aumentando con el paso de los años. Además, en el año 2009 el consumo de diesel fue muy poco en comparación a años anteriores, luego como en el año 2021 hubo otro bajón de consumo, posiblemente se deba a los precios elevados del combustible por la guerra entre Ucrania y Rusia.
+Acá se representa el comportamiento del consumo de la gasolina regular desde enero 2001 hasta mayo 2022 y a simple vista se puede decir que no es estacionaria ni en media ni en varianza porque tiene una clara tendencia a que el consumo de gasolina regular va aumentando con el paso de los años. Sin embargo, se ve que luego del año 2020 hubo un alto decremento en el consumo de dicho combustible, posiblemente se deba a las mismas causas de los otros casos de los otros combustibles, por la pandemia y los precios elevados del causados por la guerra entre Ucrania y Rusia.
 
 ```{r}
 plot(aggregate(regular_ts,FUN=mean))
@@ -571,7 +571,7 @@ dec.Regular<-decompose(regular_ts)
 plot(dec.Regular)
 ```
 
-En estas gráficas se afirma la tendencia a aumentar del consumo de diesel y que no es estacionaria en varianza.
+En estas gráficas se afirma la tendencia a aumentar del consumo de gasolina regular y que no es estacionaria en varianza.
 
 #### Estimación
 
@@ -588,7 +588,7 @@ plot(decompose(train))
 plot(train)
 ```
 
-Aparentemente ahora la serie es estacionaria en varianza. Ahora se debe verificar si es estacionaria en media, si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
+Aparentemente ahora la serie es estacionaria en varianza. Ahora se debe verificar si es estacionaria en media, si tiene raices unitarias podemos decir que no es estacionaria en media y se aplicarían procesos de diferenciación.
 
 ```{r}
 #Para saber si hay raíces unitarias
@@ -596,21 +596,21 @@ adfTest(train)
 unitrootTest(train)
 ```
 
-Se observa que el valor de P es mayor a 0.05 por lo que la hipótesis nula no se rechaza, esto quiere decir que la serie no es estacionaria. Ahora veamos con diferenciación.
+Se observa que el valor de P es mayor a 0.05 por lo que la hipótesis nula no se rechaza, esto quiere decir que la serie no es estacionaria. Entonces aplicamos diferenciación.
 
 ```{r}
 adfTest(diff(train))
 unitrootTest(diff(train))
 ```
 
-Ahora el valor de P sí está por debajo de 0.05 y la hipótesis nula se rechaza diciendo que la serie es estacionaria. Ahora trataremos de identificar los parámetros p y q usando los gráficos de autocorrelación y autocorrelación parcial.
+Ahora el valor de P sí está por debajo de 0.05 y la hipótesis nula se rechaza diciendo que la serie es estacionaria. Ahora pasamos a identificar los parámetros p y q usando los gráficos de autocorrelación y autocorrelación parcial.
 
 ```{r}
 #Gráfico de autocorrelación
 acf(logRegular,50)
 ```
 
-En el gráfico se observa que se anula después del primer retardo, entonces decimos que q = 1. Ahora veamos la función de correlación parcial.
+En el gráfico se observa que se anula después del tercer retardo, entonces decimos que q = 3. Ahora veamos la función de correlación parcial.
 
 ```{r}
 pacf(logRegular,50)
@@ -619,8 +619,8 @@ pacf(logRegular,50)
 Se anula después de dos retardos por lo que se plantea que el coeficiente p = 2. Podríamos elaborar un modelo con los siguientes parámetros:
 p=2.
 d=1.
-q=1.
-Es decir ARIMA(2,1,1).
+q=3.
+Es decir ARIMA(2,1,3).
 Ahora veamos si hay estacionalidad en la serie. Si volvemos a ver la descomposición de la serie en su componente estacional.
 
 ```{r}
@@ -628,7 +628,7 @@ decTrain<-decompose(train)
 plot(decTrain$seasonal)
 ```
 
-Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en qué momentos son los picos estacionales, se usará la serie estacionarizada.
+Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en qué momentos son los picos estacionales, para ello se usará la serie estacionarizada.
 
 ```{r}
 acf(diff(logRegular),36)
@@ -672,7 +672,7 @@ qqline(fitAutoArima$residuals)
 checkresiduals(fitAutoArima)
 ```
 
-Se observa un caso bastante similar.
+Ahora el valor de P cambió y es mucho mayor a 0.05, entonces no se rechaza la hipótesis nula, lo que nos dice que los residuos del modelo son independientes.
 
 #### Predicción
 
@@ -687,7 +687,7 @@ forecastAP3<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP3)
 ```
 
-Tal como se observa, la prediccion indica que el consumo de diesel se mantendrá, es decir, irá bajando y subiendo durante los próximos años.
+Se observa que la prediccion indica que el consumo de gasolina regular se mantendrá, es decir, primero subirá y luego irá bajando más y así sucesivamente durante los próximos años.
 
 ```{r}
 regular_ts2018<-ts( regular$`Gasolina regular`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
@@ -723,3 +723,7 @@ ggplot(pred, aes(x=ds, y=yhat)) +
 ```
 
 Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
+
+### Comportamiento durante la pandemia
+
+Como bien sabemos, el consumo general de la gasolina disminuyó considerablemente en la pandemia por el Covid-19 porque la gente no podía salir de sus casas. Esto afectó en parte en las predicciones hechas para los tres modelos porque los datos son dependientes para poder predecir y lo comprobamos en la comparación de ambas gráficas generadas en la parte de predecir, no coincidían del todo pero la idea era la misma. Los valores habituales ya en el regreso a la "nueva normalidad" se están recuperando poco a poco, al menos la tendencia a que el consumo va incrementando se nota, sin embargo hay alguno que otro dato extremo, lo que tiene sentido porque luego de la pandemia vino la guerra entre Ucrania y Rusia lo que trajo consecuencias a todo el mundo como el alza de los precios del petróleo. Entonces no se han recuperado los datos habituales del todo en los últimos años.
