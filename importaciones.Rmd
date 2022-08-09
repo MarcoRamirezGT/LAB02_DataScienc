@@ -24,6 +24,7 @@ importacion$Fecha<-as.Date(importacion$Fecha, "%Y/%m/%d")
 ## Importaciones
 
 El dataset de importaciones cuenta con `r nrow(importacion)` filas y `r ncol(importacion)` las cuales son las siguientes 
+
 ```{r}
 
 str(importacion)
@@ -48,6 +49,7 @@ La variable gasolina regular tiene el siguiente comportamiento:
 hist(x = importacion$`Gasolina regular`)
 
 ```
+
 La variable gasolina alto azufre tiene el siguiente comportamiento:
 
 ```{r}
@@ -59,6 +61,7 @@ hist(x = importacion$`Diesel alto azufre`)
 
 
 ### ¿Cuál fue la fecha con mayor cantidad de importaciones de gasolina superior?
+
 ```{r}
 
 superior <- importacion[order(-importacion$`Gasolina superior`),]
@@ -68,6 +71,7 @@ superior
 
 
 ```
+
 Tal como se observa la fecha con mayor importacion de gasolina superior es *2021-04-01* con una cantidad de *`r as.integer(superior[1,2])`*
 
 ### ¿Cuál fue la fecha con menor cantidad de importaciones de gasolina superior?
@@ -91,10 +95,12 @@ dieselImpo<- dieselImpo[c('Fecha','Diesel alto azufre')]
 dieselImpo
 
 ```
+
 Tal como se observa la fecha con mayor importacion de gasolina superior es *`r dieselImpo[1,1]`* con una cantidad de *`r as.integer(dieselImpo[1,2])`*
 
 
 ### ¿Cuál fue la fecha con menor cantidad de importaciones de gasolina Diesel?
+
 ```{r}
 diesel_menor_impor <- importacion[order(importacion$`Diesel alto azufre`),]
 diesel_menor_impor<- head(diesel_menor_impor,10)
@@ -169,6 +175,7 @@ Como se observa en la grafica anterior el año con mayor importacion es 2014, si
 ```{r warning=FALSE}
 chart_diesel_mes
 ```
+
 Como se observa, hubo un aumento de importaciones a inicios y finales del año 2014, una de las posibles causas fue el sismo que ocurrio a inicios de ese año y a finales del año el precio del combustible aumento. 
 
 ### Año que mas importaciones hubo de gasolina Superior
@@ -196,9 +203,11 @@ Como se observa en la grafica anterior el año con mayor importacion fue 2021, d
 ```{r warning=FALSE}
 chart_superior_mes
 ```
+
 Como se logra observar el pico de importaciones de ese año es el mes de abril, un año despues del comienzo de la pandemia, cuando las regulaciones habian disminuido y las personas podian salir con mayor libertad.
 
 ### Año que mas importaciones hubo de gasolina Regular
+
 ```{r fig.height=8, fig.width=13, warning=FALSE}
 chart_regular<-ggplot(importacion, aes(x = format(importacion$Fecha, format='%Y'), y = importacion$`Gasolina regular`, fill =format(importacion$Fecha, format='%Y') )) +
   geom_bar(stat = "identity",position=position_dodge())+labs(title="Importaciones por año de gasolina Regular", y="Importacion" , x='Año')+
@@ -212,6 +221,7 @@ chart_regular_mes<-ggplot(mes_2022, aes(x = format(mes_2022$Fecha, format='%m'),
 chart_regular
 
 ```
+
 Como se observa en la grafica anterior el año con mayor importacion es 2022, el cual veremos a mas detalle
 
 ```{r warning=FALSE}
@@ -279,6 +289,7 @@ Podemos observar una serie con tendencia a aumentar, que no es estacionaria en v
 #### Estimacion
 
 Cómo no es estacionaria en varianza le haremos una transformación logaritmica para hacerla constante en varianza.Lo haremos con la serie de entrenamiento que es la que nos ayudará a predecir
+
 ```{r}
 train <- head(regular_ts, round(length(regular_ts) * 0.7))
 h <- length(regular_ts) - length(train)
@@ -300,14 +311,17 @@ plot(train)
 ```
 
 Al parecer se logró hacer constante la serie en varianza. Debemos verificar si es estacionaria en media. Si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
+
 ```{r}
 #Para saber si hay raíces unitarias
 adfTest(train)
 unitrootTest(train)
 
 ```
+
 Como se observa en varias pruebas el valor de P es menos a 0.05 por lo que se puede rechazar la hipotis nula de ausencia de raices. Esto significa que es estacionaria en media. 
 Ahora veamos con diferenciacion. 
+
 ```{r}
 adfTest(diff(train))
 unitrootTest(diff(train))
@@ -333,6 +347,7 @@ En el gráfico de la función podemos ver que se anula después del segundo reta
 pacf(logRegular,50) 
 
 ```
+
 Podemos ver que se anula después de dos retardos por lo que podíamos plantear que el coeficiente p = 2.
 
 Podríamos elaborar un modelo con los siguientes parámetros:
@@ -350,6 +365,7 @@ decTrain <- decompose(train)
 plot(decTrain$seasonal)
 
 ```
+
 Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en que momentos son los picos estacionales. Se usará la serie estacionarizada.
 
 ```{R}
@@ -357,6 +373,7 @@ Acf(diff(logRegular),36)
 Pacf(diff(logRegular),36)
 
 ```
+
 Cómo podemos ver en la función de autocorrelación tenemos un decaimiento en los picos estacionales, 12, 24, 36, y en la función de autocorrelación parcial, un pico significativo en el retardo 12. Eso sugiere que los parámetros del componente estacional son P = 1, D = 1 (el período es de 12 meses por lo que se puede hacer una diferenciación estacional), y Q=0.
 
 ```{r}
@@ -364,6 +381,7 @@ fitArima <- arima(logRegular,order=c(2,1,2),seasonal = c(1,1,0))
 fitAutoArima <- auto.arima(train)
 
 ```
+
 #### Validacion 
 #### Significacion de los coeficientes
 
@@ -373,6 +391,7 @@ library(lmtest)
 coeftest(fitArima)
 
 ```
+
 Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora el modelo generado de forma automática por R
 
 
@@ -381,8 +400,10 @@ Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora
 coeftest(fitAutoArima)
 
 ```
+
 También son significativos los coeficientes.
 Analicemos ahora los residuos de ambos modelos:
+
 ##### Analisis de residuales
 
 ```{r}
@@ -391,6 +412,7 @@ qqline(fitArima$residuals)
 checkresiduals(fitArima)
 
 ```
+
 Según los gráficos podemos ver que la distribución de los datos parece ser normal, y que no hay correlaciones significativas.
 Según el test de Ljung-Box los datos se distribuyen de forma independiente puesto que el p-value es mayor a 0.05, por lo que no se puede rechazar la hipótesis nula. Esto significa que el modelo generado es aceptable para predecir.
 
@@ -424,6 +446,7 @@ fit2 <- arima(log(regular_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), pe
 forecastAP <- forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP)
 ```
+
 Tal como se observa segun la prediccion indica que la importacion seguira reduciendose durante estos años, y tiene coherencia ya que el precio de la gasolina sigue aumentando y las personas hoy en dia deciden transportarse por otros medio o incluso consumir otro tipo de gasolina. 
 
 ```{r}
@@ -467,6 +490,7 @@ ggplot(pred, aes(x=ds, y=yhat)) +
    geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="blue", alpha=0.2) +
    geom_line(data=pred, aes(x=ds, y=y),color="red")
 ```
+
 Las visualizaciones de pronósticos muestran que Prophet fue capaz de modelar con precisión la tendencia subyacente en los datos, al mismo tiempo que modelaba con precisión la estacionalidad anual.
 
 ### Serie de tiempo de la gasolina Super 
@@ -525,6 +549,7 @@ Podemos observar una serie con tendencia a aumentar, que no es estacionaria en v
 #### Estimacion
 
 Cómo no es estacionaria en varianza le haremos una transformación logaritmica para hacerla constante en varianza.Lo haremos con la serie de entrenamiento que es la que nos ayudará a predecir
+
 ```{r}
 train <- head(super_ts, round(length(super_ts) * 0.7))
 h <- length(super_ts) - length(train)
@@ -546,14 +571,17 @@ plot(train)
 ```
 
 Al parecer se logró hacer constante la serie en varianza. Debemos verificar si es estacionaria en media. Si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
+
 ```{r}
 #Para saber si hay raíces unitarias
 adfTest(train)
 unitrootTest(train)
 
 ```
+
 Como se observa en varias pruebas el valor de P es mayor a 0.05 por lo que no se puede rechazar la hipotis nula de ausencia de raices. Esto significa que no es estacionaria en media. 
 Ahora veamos con diferenciacion. 
+
 ```{r}
 adfTest(diff(train))
 unitrootTest(diff(train))
@@ -579,6 +607,7 @@ En el gráfico de la función podemos ver que se anula después de un  retardo p
 pacf(logSuper,50) 
 
 ```
+
 Podemos ver que se anula después de dos retardos por lo que podíamos plantear que el coeficiente p = 1.
 
 Podríamos elaborar un modelo con los siguientes parámetros:
@@ -596,6 +625,7 @@ decTrain <- decompose(train)
 plot(decTrain$seasonal)
 
 ```
+
 Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en que momentos son los picos estacionales. Se usará la serie estacionarizada.
 
 ```{R}
@@ -603,6 +633,7 @@ Acf(diff(logSuper),36)
 Pacf(diff(logSuper),36)
 
 ```
+
 Cómo podemos ver en la función de autocorrelación tenemos un decaimiento en los picos estacionales, 12, 24, 36, y en la función de autocorrelación parcial, un pico significativo en el retardo 12. Eso sugiere que los parámetros del componente estacional son P = 1, D = 1 (el período es de 12 meses por lo que se puede hacer una diferenciación estacional), y Q=0.
 
 ```{r}
@@ -610,6 +641,7 @@ fitArima <- arima(logSuper,order=c(1,1,1),seasonal = c(1,1,0))
 fitAutoArima <- auto.arima(train)
 
 ```
+
 #### Validacion 
 #### Significacion de los coeficientes
 
@@ -619,6 +651,7 @@ library(lmtest)
 coeftest(fitArima)
 
 ```
+
 Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora el modelo generado de forma automática por R
 
 
@@ -627,6 +660,7 @@ Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora
 coeftest(fitAutoArima)
 
 ```
+
 También son significativos los coeficientes.
 Analicemos ahora los residuos de ambos modelos:
 ##### Analisis de residuales
@@ -637,6 +671,7 @@ qqline(fitArima$residuals)
 checkresiduals(fitArima)
 
 ```
+
 Según los gráficos podemos ver que la distribución de los datos parece ser normal, y que no hay correlaciones significativas.
 Según el test de Ljung-Box los datos se distribuyen de forma independiente puesto que el p-value es menor a 0.05, por lo que  se puede rechazar la hipótesis nula. 
 Analizando los residuos del modelo generado de forma automática por R tenemos los siguientes resultados:
@@ -669,7 +704,9 @@ fit2 <- arima(log(super_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), peri
 forecastAP <- forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP)
 ```
+
 Tal como se observa segun la prediccion indica que la importacion aumentara en los siguientes años. 
+
 ```{r}
 super_ts2018 <- ts( super$`Gasolina superior`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
 
@@ -770,6 +807,7 @@ Podemos observar una serie con tendencia a aumentar, que no es estacionaria en v
 #### Estimacion
 
 Cómo no es estacionaria en varianza le haremos una transformación logaritmica para hacerla constante en varianza. Lo haremos con la serie de entrenamiento que es la que nos ayudará a predecir
+
 ```{r}
 train <- head(diesel_ts, round(length(diesel_ts) * 0.7))
 h <- length(diesel_ts) - length(train)
@@ -791,14 +829,17 @@ plot(train)
 ```
 
 Al parecer se logró hacer constante la serie en varianza. Debemos verificar si es estacionaria en media. Si tiene raices unitarias podemos decir que no es estacionaria en media y hay que aplicar procesos de diferenciación.
+
 ```{r}
 #Para saber si hay raíces unitarias
 adfTest(train)
 unitrootTest(train)
 
 ```
+
 Como se observa en varias pruebas el valor de P es mayor a 0.05 por lo que no se puede rechazar la hipotis nula de ausencia de raices. Esto significa que no es estacionaria en media. 
 Ahora veamos con diferenciacion. 
+
 ```{r}
 adfTest(diff(train))
 unitrootTest(diff(train))
@@ -824,6 +865,7 @@ En el gráfico de la función podemos ver que se anula después de dos retardos 
 pacf(logDiesel,50) 
 
 ```
+
 Podemos ver que se anula después de dos retardos por lo que podíamos plantear que el coeficiente p = 2.
 
 Podríamos elaborar un modelo con los siguientes parámetros:
@@ -841,6 +883,7 @@ decTrain <- decompose(train)
 plot(decTrain$seasonal)
 
 ```
+
 Al parecer sí existe estacionalidad en la serie. Para tener una idea de los parámetros estacionales veremos las funciones de autocorrelación y autocorrelación parcial con 36 resagos para ver en que momentos son los picos estacionales. Se usará la serie estacionarizada.
 
 ```{R}
@@ -848,6 +891,7 @@ Acf(diff(logDiesel),36)
 Pacf(diff(logDiesel),36)
 
 ```
+
 Cómo podemos ver en la función de autocorrelación tenemos un decaimiento en los picos estacionales, 12, 24, 36, y en la función de autocorrelación parcial, un pico significativo en el retardo 12. Eso sugiere que los parámetros del componente estacional son P = 1, D = 1 (el período es de 12 meses por lo que se puede hacer una diferenciación estacional), y Q=0.
 
 ```{r}
@@ -855,6 +899,7 @@ fitArima <- arima(logDiesel,order=c(1,1,1),seasonal = c(1,1,0))
 fitAutoArima <- auto.arima(train)
 
 ```
+
 #### Validacion 
 #### Significacion de los coeficientes
 
@@ -864,6 +909,7 @@ library(lmtest)
 coeftest(fitArima)
 
 ```
+
 Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora el modelo generado de forma automática por R
 
 
@@ -872,6 +918,7 @@ Cómo se puede obserevar todos los coeficientes son significativos. Veamos ahora
 coeftest(fitAutoArima)
 
 ```
+
 También son significativos los coeficientes.
 Analicemos ahora los residuos de ambos modelos:
 ##### Analisis de residuales
@@ -882,6 +929,7 @@ qqline(fitArima$residuals)
 checkresiduals(fitArima)
 
 ```
+
 Según los gráficos podemos ver que la distribución de los datos parece ser normal, y que no hay correlaciones significativas.
 Según el test de Ljung-Box los datos se distribuyen de forma independiente puesto que el p-value es menor a 0.05, por lo que  se puede rechazar la hipótesis nula. 
 Analizando los residuos del modelo generado de forma automática por R tenemos los siguientes resultados:
@@ -914,7 +962,9 @@ fit2 <- arima(log(diesel_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), per
 forecastAP <- forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP)
 ```
+
 Tal como se observa segun la prediccion indica que la importacion aumentara en los siguientes años a excepcion del ultimo que sufrira un pequeño cambio. 
+
 ```{r}
 diesel_ts2018 <- ts( diesel$`Diesel alto azufre`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
 

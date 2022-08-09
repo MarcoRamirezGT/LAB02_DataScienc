@@ -218,34 +218,79 @@ abline(reg=lm(super_ts~time(super_ts)), col=c("red"))
 plot(aggregate(super_ts,FUN=mean))
 dec.Super<-decompose(super_ts)
 plot(dec.Super)
-plot(dec.Super$seasonal)
+
+train<-head(super_ts, round(length(super_ts) * 0.7))
+h<-length(super_ts) - length(train)
+test<-tail(super_ts, h)
 
 #Aplicaremos una transformación logarítmica
-logSuper<-log(super_ts)
-plot(decompose(logSuper))
+logSuper<-log(train)
+plot(decompose(train))
+plot(train)
 
-#Ver el gráfico de la serie
-plot(logSuper)
+adfTest(train)
+unitrootTest(train)
 
-#Para saber si hay raíces unitarias
-adfTest(logSuper)
-adfTest(diff(logSuper))
+adfTest(diff(train))
+unitrootTest(diff(train))
 
 #Gráfico de autocorrelación
-acf(logSuper)
+acf(logSuper,50)
+pacf(logSuper,50)
 
-# funciones de autocorrelación y autocorrelación parcial
-acf(diff(logSuper),12)
-pacf(diff(logSuper))
+decTrain<-decompose(train)
+plot(decTrain$seasonal)
+
+acf(diff(logSuper),36)
+pacf(diff(logSuper),36)
+
+fitArima<-arima(logSuper,order=c(2,1,2),seasonal = c(1,1,0))
+fitAutoArima<-auto.arima(train)
+
+coeftest(fitArima)
+coeftest(fitAutoArima)
+
+qqnorm(fitArima$residuals)
+qqline(fitArima$residuals)
+checkresiduals(fitArima)
+
+qqnorm(fitAutoArima$residuals)
+qqline(fitAutoArima$residuals)
+checkresiduals(fitAutoArima)
 
 # Hacer el modelo
 auto.arima(super_ts)
 fit<-arima(log(super_ts), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
-pred<-predict(fit, n.ahead = 10*12)
+pred<-predict(fit, n.ahead = 3)
 ts.plot(super_ts,2.718^pred$pred, log = "y", lty = c(1,3))
 fit2<-arima(log(super_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
-forecastAP2<-forecast(fit2, level = c(95), h = 120)
+forecastAP2<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP2)
+
+super_ts2018<-ts( super$`Gasolina superior`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
+auto.arima(super_ts2018)
+fit<-arima(log(super_ts2018), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
+pred<-predict(fit, n.ahead = 3)
+ts.plot(super_ts2018,2.718^pred$pred, log = "y", lty = c(1,3))
+fit2<-arima(log(super_ts2018), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
+forecastAP<-forecast(fit2, level = c(95), h = 3)
+autoplot(forecastAP)
+
+df<-data.frame(ds=as.Date(as.yearmon(time(train))),y=as.matrix(train) )
+testdf<-data.frame(ds=as.Date(as.yearmon(time(test))),y=as.matrix(test) )
+head(df)
+fitProphet<-prophet(df, yearly.seasonality = TRUE, weekly.seasonality = TRUE)
+future<-make_future_dataframe(fitProphet,periods = h,freq = "month", include_history = T)
+p<-predict(fitProphet,future)
+p<-p[,c("ds","yhat","yhat_lower","yhat_upper")]
+plot(fitProphet,p)
+pred<-tail(p,h)
+pred$y<-testdf$y
+
+ggplot(pred, aes(x=ds, y=yhat)) +
+  geom_line(size=1, alpha=0.8) +
+  geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="blue", alpha=0.2) +
+  geom_line(data=pred, aes(x=ds, y=y),color="red")
 
 
 
@@ -259,31 +304,76 @@ abline(reg=lm(regular_ts~time(regular_ts)), col=c("red"))
 plot(aggregate(regular_ts,FUN=mean))
 dec.Regular<-decompose(regular_ts)
 plot(dec.Regular)
-plot(dec.Regular$seasonal)
+
+train<-head(regular_ts, round(length(regular_ts) * 0.7))
+h<-length(regular_ts) - length(train)
+test<-tail(regular_ts, h)
 
 #Aplicaremos una transformación logarítmica
-logRegular<-log(regular_ts)
-plot(decompose(logRegular))
+logRegular<-log(train)
+plot(decompose(train))
+plot(train)
 
-#Ver el gráfico de la serie
-plot(logRegular)
+adfTest(train)
+unitrootTest(train)
 
-#Para saber si hay raíces unitarias
-adfTest(logRegular)
-adfTest(diff(logRegular))
+adfTest(diff(train))
+unitrootTest(diff(train))
 
 #Gráfico de autocorrelación
-acf(logRegular)
+acf(logRegular,50)
+pacf(logRegular,50)
 
-# funciones de autocorrelación y autocorrelación parcial
-acf(diff(logRegular),12)
-pacf(diff(logRegular))
+decTrain<-decompose(train)
+plot(decTrain$seasonal)
+
+acf(diff(logRegular),36)
+pacf(diff(logRegular),36)
+
+fitArima<-arima(logRegular,order=c(2,1,2),seasonal = c(1,1,0))
+fitAutoArima<-auto.arima(train)
+
+coeftest(fitArima)
+coeftest(fitAutoArima)
+
+qqnorm(fitArima$residuals)
+qqline(fitArima$residuals)
+checkresiduals(fitArima)
+
+qqnorm(fitAutoArima$residuals)
+qqline(fitAutoArima$residuals)
+checkresiduals(fitAutoArima)
 
 # Hacer el modelo
 auto.arima(regular_ts)
 fit<-arima(log(regular_ts), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
-pred<-predict(fit, n.ahead = 10*12)
+pred<-predict(fit, n.ahead = 3)
 ts.plot(regular_ts,2.718^pred$pred, log = "y", lty = c(1,3))
 fit2<-arima(log(regular_ts), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
-forecastAP3<-forecast(fit2, level = c(95), h = 120)
+forecastAP3<-forecast(fit2, level = c(95), h = 3)
 autoplot(forecastAP3)
+
+regular_ts2018<-ts( regular$`Gasolina regular`, start = c(2001,1), end=c(2020,12) ,frequency = 12)
+auto.arima(regular_ts2018)
+fit<-arima(log(regular_ts2018), c(0, 1, 1),seasonal = list(order = c(0, 1, 1), period = 12))
+pred<-predict(fit, n.ahead = 3)
+ts.plot(regular_ts2018,2.718^pred$pred, log = "y", lty = c(1,3))
+fit2<-arima(log(regular_ts2018), c(2, 1, 1),seasonal = list(order = c(0, 1, 0), period = 12))
+forecastAP<-forecast(fit2, level = c(95), h = 3)
+autoplot(forecastAP)
+
+df<-data.frame(ds=as.Date(as.yearmon(time(train))),y=as.matrix(train) )
+testdf<-data.frame(ds=as.Date(as.yearmon(time(test))),y=as.matrix(test) )
+head(df)
+fitProphet<-prophet(df, yearly.seasonality = TRUE, weekly.seasonality = TRUE)
+future<-make_future_dataframe(fitProphet,periods = h,freq = "month", include_history = T)
+p<-predict(fitProphet,future)
+p<-p[,c("ds","yhat","yhat_lower","yhat_upper")]
+plot(fitProphet,p)
+pred<-tail(p,h)
+pred$y<-testdf$y
+
+ggplot(pred, aes(x=ds, y=yhat)) +
+  geom_line(size=1, alpha=0.8) +
+  geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="blue", alpha=0.2) +
+  geom_line(data=pred, aes(x=ds, y=y),color="red")
